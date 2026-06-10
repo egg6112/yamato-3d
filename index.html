@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>戦艦大和 3D ビューア — IJN YAMATO</title>
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app"></div>
+
+<div class="brand">
+  <h1>戦艦大和</h1>
+  <p>IJN BATTLESHIP YAMATO — INTERACTIVE 3D VIEWER</p>
+  <p class="spec">全長 263m ／ 全幅 38.9m ／ 46cm 三連装主砲 ×3</p>
+</div>
+
+<div class="panel" id="mode-panel">
+  <button id="btn-real" class="active">リアル</button>
+  <button id="btn-wire">ワイヤーフレーム</button>
+  <button id="btn-rotate">自動回転</button>
+</div>
+
+<div class="help">
+  <span>左ドラッグ：回転</span>
+  <span>右ドラッグ：移動</span>
+  <span>ホイール：拡大縮小</span>
+  <span>[W]：描画切替</span>
+  <span id="stat"></span>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>戦艦大和を建造中…</p>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
