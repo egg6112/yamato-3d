@@ -55,6 +55,20 @@ window.addEventListener('resize', () => {
 // デバッグ・検証用フック
 window.__yamato = { camera, controls, scene, renderer, yamato, animator, smoke };
 
+/* ---- 三角形数の表示 ----
+   ワイヤーフレーム時は線分描画になり renderer.info の triangles が 0 になるため、
+   描画モードに依存しないモデル自体のジオメトリから静的に集計する */
+{
+  let triCount = 0;
+  yamato.traverse((o) => {
+    if (!o.isMesh) return;
+    const g = o.geometry;
+    triCount += (g.index ? g.index.count : g.attributes.position.count) / 3;
+  });
+  document.getElementById('stat').textContent =
+    `三角形数: ${Math.round(triCount).toLocaleString()}`;
+}
+
 /* ---- ループ ---- */
 const clock = new THREE.Clock();
 let firstFrame = true;
@@ -78,7 +92,5 @@ renderer.setAnimationLoop(() => {
   if (firstFrame) {
     firstFrame = false;
     document.getElementById('loading').classList.add('hidden');
-    const stat = document.getElementById('stat');
-    stat.textContent = `三角形数: ${renderer.info.render.triangles.toLocaleString()}`;
   }
 });
