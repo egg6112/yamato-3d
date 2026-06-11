@@ -68,11 +68,12 @@ function buildTurret(M, opt) {
 
   // 砲身 ×3（中央はわずかに後退）
   // ピボットは俯仰アニメーション用に userData.pivots へ登録する
+  // 回転中心は砲室前面（砲門）位置に置き、仰角時に砲身が天蓋へめり込まないようにする
   const trunnionY = opt.houseH * 0.42;
   const pivots = [];
   for (let i = -1; i <= 1; i++) {
     const pivot = new THREE.Group();
-    pivot.position.set(opt.Lf - 0.5 + (i === 0 ? -opt.recess : 0), trunnionY, i * opt.spacing);
+    pivot.position.set(opt.Lf + opt.bevel * 0.4 + (i === 0 ? -opt.recess : 0), trunnionY, i * opt.spacing);
     pivot.rotation.z = opt.elev;
 
     const barrel = new THREE.Mesh(
@@ -124,10 +125,16 @@ export function buildTurrets(M) {
 
   // ---- 主砲バーベット＋砲塔 ----
   // 一番（前部・甲板レベル）／二番（背負い式・嵩上げ）／三番（後部）
+  // limits: 構造物へのめり込みを防ぐ射界制限（deg）
+  //   sweep   = 基準角からの旋回範囲 ±
+  //   elevMin = 俯角下限（艦首シア・隣接砲塔・上構との干渉回避）
   const mains = [
-    { x: 63, barbH: 1.0, rotY: 0 },
-    { x: 40, barbH: 3.4, rotY: 0 },
-    { x: -63, barbH: 1.0, rotY: Math.PI },
+    { x: 63, barbH: 1.0, rotY: 0,
+      limits: { sweep: 150, elevMin: 0, elevMax: 45 } },   // 艦首甲板シアと干渉するため俯角 0°
+    { x: 40, barbH: 3.4, rotY: 0,
+      limits: { sweep: 135, elevMin: 3, elevMax: 45 } },   // 背負い式: 一番砲塔天蓋を越える仰角が必要
+    { x: -63, barbH: 1.0, rotY: Math.PI,
+      limits: { sweep: 120, elevMin: -2, elevMax: 45 } },  // 前方旋回時に第一上構と干渉するため狭め
   ];
   for (const m of mains) {
     const deck = deckAt(m.x);
@@ -140,14 +147,17 @@ export function buildTurrets(M) {
     t.position.set(m.x, deck + m.barbH, 0);
     t.rotation.y = m.rotY;
     t.userData.baseRotY = m.rotY;
+    t.userData.limits = m.limits;
     g.add(t);
     turretList.push(t);
   }
 
   // ---- 副砲（前後の上構上・背負い式） ----
   const secs = [
-    { x: 20, y: 14.0, barbH: 1.2, rotY: 0 },
-    { x: -42, y: 14.0, barbH: 1.2, rotY: Math.PI },
+    { x: 20, y: 14.0, barbH: 1.2, rotY: 0,
+      limits: { sweep: 135, elevMin: -5, elevMax: 45 } },  // 後方旋回時に艦橋と干渉するため狭め
+    { x: -42, y: 14.0, barbH: 1.2, rotY: Math.PI,
+      limits: { sweep: 150, elevMin: -5, elevMax: 45 } },
   ];
   for (const s of secs) {
     const barb = new THREE.Mesh(
@@ -159,6 +169,7 @@ export function buildTurrets(M) {
     t.position.set(s.x, s.y + s.barbH, 0);
     t.rotation.y = s.rotY;
     t.userData.baseRotY = s.rotY;
+    t.userData.limits = s.limits;
     g.add(t);
     turretList.push(t);
   }

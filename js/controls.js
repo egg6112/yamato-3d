@@ -88,5 +88,16 @@ export function setupUI({ scene, yamato, env, controls, grid, animator, smoke })
     btnBarrel.classList.toggle('active', barrelAnim);
   });
 
+  // ---- 初期状態: ワイヤーフレーム・自動回転・砲塔旋回・砲身俯仰すべて ON ----
+  setMode(true);
+  controls.autoRotate = true;
+  btnRotate.classList.add('active');
+  turretAnim = true;
+  animator.setTurretAnim(true);
+  btnTurret.classList.add('active');
+  barrelAnim = true;
+  animator.setBarrelAnim(true);
+  btnBarrel.classList.add('active');
+
   return { isWireframe: () => wireframe };
 }

@@ -35,9 +35,10 @@ export function createSmoke() {
     pos[i * 3] = EMIT.x + Math.cos(a) * 2.3 * r;
     pos[i * 3 + 1] = EMIT.y + Math.random() * 0.8;
     pos[i * 3 + 2] = EMIT.z + Math.sin(a) * 1.5 * r;
-    vel[i * 3] = -(1.2 + Math.random() * 1.4);        // 後方へ流れる
-    vel[i * 3 + 1] = 2.6 + Math.random() * 2.4;       // 上昇
-    vel[i * 3 + 2] = (Math.random() - 0.5) * 0.9;     // 横拡散
+    // 前進走航の相対風を受け、上昇しつつ艦尾方向（-X）へ強く流れるベクトル
+    vel[i * 3] = -(3.2 + Math.random() * 2.4);        // 後方流（艦尾方向）
+    vel[i * 3 + 1] = 3.0 + Math.random() * 2.2;       // 上昇
+    vel[i * 3 + 2] = (Math.random() - 0.5) * 0.8;     // 横拡散
     dur[i] = 5 + Math.random() * 4;
     life[i] = scatter ? Math.random() : 0;
     // 起動直後から煙柱が立っているよう、初期化時は寿命分だけ前進させる
@@ -104,7 +105,7 @@ export function createSmoke() {
       pos[i * 3] += vel[i * 3] * dt;
       pos[i * 3 + 1] += vel[i * 3 + 1] * dt;
       pos[i * 3 + 2] += vel[i * 3 + 2] * dt;
-      vel[i * 3] -= 0.25 * dt; // 風で徐々に後方へ加速
+      vel[i * 3] -= 0.55 * dt; // 相対風で徐々に後方へ加速（煙柱が艦尾へ寝ていく）
 
       const l = life[i];
       const fadeIn = Math.min(l / 0.12, 1);
