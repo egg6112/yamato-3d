@@ -17,7 +17,7 @@ export function setupControls(camera, dom) {
 /**
  * UI（リアル⇔ワイヤーフレーム切替・自動回転・砲塔/砲身アニメ・煙制御）
  */
-export function setupUI({ scene, yamato, env, controls, grid, animator, smoke }) {
+export function setupUI({ scene, yamato, env, controls, grid, animator, smoke, wake }) {
   const wireMat = new THREE.MeshBasicMaterial({
     wireframe: true,
     color: 0x4fd2ff,
@@ -42,7 +42,7 @@ export function setupUI({ scene, yamato, env, controls, grid, animator, smoke })
     wireframe = wire;
 
     yamato.traverse((o) => {
-      if (!o.isMesh) return;
+      if (!o.isMesh || o.userData.noWire) return; // 航跡プレーン等は対象外
       if (wire) {
         o.userData.realMaterial = o.material;
         o.material = wireMat;
@@ -58,6 +58,7 @@ export function setupUI({ scene, yamato, env, controls, grid, animator, smoke })
     scene.background = wire ? wireBg : null;
     grid.visible = wire;
     smoke.points.visible = !wire; // 煙はリアル描画のみ
+    wake.group.visible = !wire;   // 航跡・気泡・艦首波もリアル描画のみ
 
     btnReal.classList.toggle('active', !wire);
     btnWire.classList.toggle('active', wire);

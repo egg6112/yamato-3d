@@ -142,6 +142,7 @@ export function buildDeckStrip(M, mat, x0, x1, inset = 0.35, yOff = 0, segs = 12
 
 function buildPropulsion(M) {
   const g = new THREE.Group();
+  const propellers = [];
 
   // 4軸スクリュー（内側2軸・外側2軸）
   const shaftSpecs = [
@@ -168,8 +169,14 @@ function buildPropulsion(M) {
       prop.add(blade);
     }
     prop.position.set(s.x, s.y, s.z);
+    // 常時回転アニメーション用（シャフトは X 軸方向 → 回転軸は rotation.x）
+    // 左右舷で回転方向を逆転（外回り）、内軸はやや高速
+    prop.userData.spinDir = s.z > 0 ? 1 : -1;
+    prop.userData.spinSpeed = Math.abs(s.z) > 5 ? 11 : 13; // rad/s（外軸/内軸）
+    propellers.push(prop);
     g.add(prop);
   }
+  g.userData.propellers = propellers;
 
   // 主舵＋副舵（中心線上）
   const mainRudder = new THREE.Mesh(new THREE.BoxGeometry(4.6, 6.2, 0.55), M.hull);
@@ -219,6 +226,8 @@ export function buildHull(M) {
     g.add(bw);
   }
 
-  g.add(buildPropulsion(M));
+  const propulsion = buildPropulsion(M);
+  g.add(propulsion);
+  g.userData.propellers = propulsion.userData.propellers; // アニメーション用参照
   return g;
 }

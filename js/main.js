@@ -6,6 +6,7 @@ import { buildYamato } from './yamato/index.js';
 import { setupControls, setupUI } from './controls.js';
 import { createAnimator } from './animation.js';
 import { createSmoke } from './smoke.js';
+import { createWake } from './wake.js';
 
 /* ---- レンダラ ---- */
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -31,10 +32,12 @@ const materials = createMaterials();
 const yamato = buildYamato(materials);
 scene.add(yamato);
 
-/* ---- 砲塔・砲身アニメーション／煙突の煙 ---- */
+/* ---- 砲塔・砲身アニメーション／煙突の煙／航跡・気泡・艦首波 ---- */
 const animator = createAnimator(yamato);
 const smoke = createSmoke();
 yamato.add(smoke.points); // 艦と一緒に動揺させる
+const wake = createWake();
+yamato.add(wake.group);   // 航跡・気泡・艦首波も艦に追従
 
 /* ---- 設計図モード用グリッド ---- */
 const grid = new THREE.GridHelper(800, 80, 0x1c4e6e, 0x0e2c42);
@@ -43,7 +46,7 @@ scene.add(grid);
 
 /* ---- 操作・UI ---- */
 const controls = setupControls(camera, renderer.domElement);
-setupUI({ scene, yamato, env, controls, grid, animator, smoke });
+setupUI({ scene, yamato, env, controls, grid, animator, smoke, wake });
 
 /* ---- リサイズ ---- */
 window.addEventListener('resize', () => {
@@ -53,7 +56,7 @@ window.addEventListener('resize', () => {
 });
 
 // デバッグ・検証用フック
-window.__yamato = { camera, controls, scene, renderer, yamato, animator, smoke };
+window.__yamato = { camera, controls, scene, renderer, yamato, animator, smoke, wake };
 
 /* ---- 三角形数の表示 ----
    ワイヤーフレーム時は線分描画になり renderer.info の triangles が 0 になるため、
@@ -61,7 +64,7 @@ window.__yamato = { camera, controls, scene, renderer, yamato, animator, smoke }
 {
   let triCount = 0;
   yamato.traverse((o) => {
-    if (!o.isMesh) return;
+    if (!o.isMesh || o.userData.noWire) return; // エフェクト用プレーンは除外
     const g = o.geometry;
     triCount += (g.index ? g.index.count : g.attributes.position.count) / 3;
   });
@@ -80,6 +83,7 @@ renderer.setAnimationLoop(() => {
   env.update(dt);
   animator.update(dt);
   smoke.update(dt);
+  wake.update(dt);
 
   // 微小な動揺（停泊中の艦のゆらぎ）
   yamato.position.y = Math.sin(t * 0.5) * 0.16;

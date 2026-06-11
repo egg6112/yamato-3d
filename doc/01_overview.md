@@ -85,6 +85,9 @@ yamato-3d/
 │   ├── controls.js         # OrbitControls / 描画モード切替 UI
 │   ├── materials.js        # PBR マテリアル + Canvas テクスチャ生成
 │   ├── environment.js      # 空・海・太陽光・環境マップ
+│   ├── animation.js        # 砲塔旋回・砲身俯仰・スクリュー回転
+│   ├── smoke.js            # 煙突の煙パーティクル
+│   ├── wake.js             # 航跡・スクリュー気泡・艦首波
 │   └── yamato/
 │       ├── index.js        # 大和モデル統合エントリ
 │       ├── hull.js         # 船体ロフト・甲板・推進器・舵

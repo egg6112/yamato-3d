@@ -1,5 +1,6 @@
-// animation.js — 砲塔旋回・砲身俯仰の自動アニメーション
+// animation.js — 砲塔旋回・砲身俯仰・スクリュー回転の自動アニメーション
 // 対象: 主砲 3 基・副砲 2 基（userData.turrets）＋ 12.7cm 高角砲 12 基（userData.haMounts）
+//       ＋ 4 軸スクリュー（userData.propellers — 常時回転・トグル対象外）
 // 砲塔: rotation.y を基準角 ±sweep の範囲で一定速度ピンポン旋回
 // 砲身: ピボット（砲塔の子）を elevMin〜elevMax で周期俯仰
 //       ※砲身は +X 方向を向くため、俯仰の回転軸はピボットの rotation.z
@@ -42,6 +43,9 @@ export function createAnimator(yamato) {
     };
   });
 
+  // スクリュー（常時回転・前進走航の表現）
+  const propellers = yamato.userData.propellers ?? [];
+
   let turretOn = false;
   let barrelOn = false;
 
@@ -59,6 +63,11 @@ export function createAnimator(yamato) {
   }
 
   function update(dt) {
+    // スクリューは UI トグルに関係なく常時回転
+    for (const p of propellers) {
+      p.rotation.x += p.userData.spinDir * p.userData.spinSpeed * dt;
+    }
+
     if (!turretOn && !barrelOn) return;
     for (const s of guns) {
       if (turretOn) {

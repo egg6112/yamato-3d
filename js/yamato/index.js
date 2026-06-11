@@ -9,7 +9,9 @@ export function buildYamato(M) {
   const ship = new THREE.Group();
   ship.name = 'IJN_YAMATO';
 
-  ship.add(buildHull(M));
+  const hull = buildHull(M);
+  ship.add(hull);
+  ship.userData.propellers = hull.userData.propellers; // スクリュー回転用参照
   const turrets = buildTurrets(M);
   ship.add(turrets);
   ship.userData.turrets = turrets.userData.turrets; // アニメーション用参照
