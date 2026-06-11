@@ -14,7 +14,9 @@ export function buildYamato(M) {
   ship.add(turrets);
   ship.userData.turrets = turrets.userData.turrets; // アニメーション用参照
   ship.add(buildSuperstructure(M));
-  ship.add(buildDetails(M));
+  const details = buildDetails(M);
+  ship.add(details);
+  ship.userData.haMounts = details.userData.haMounts; // 高角砲アニメーション用参照
 
   // 影の設定を一括適用
   ship.traverse((o) => {

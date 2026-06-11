@@ -90,7 +90,119 @@ function buildBridgeTower(M) {
     g.add(bino);
   }
 
+  g.add(...buildBridgeDetails(M));
   return g;
+}
+
+/* ---------- 艦橋ディテール（窓枠・手すり・電探・ラッタル・張線） ---------- */
+
+/** 支柱列に上段・中段の手すりを張る。pts は支柱基部の点列 */
+function railAlong(geos, pts, h) {
+  let prevTop = null, prevMid = null;
+  for (const p of pts) {
+    const top = V(p.x, p.y + h, p.z);
+    const mid = V(p.x, p.y + h * 0.55, p.z);
+    geos.push(tubeGeometry(p, top, 0.025, 4));
+    if (prevTop) {
+      geos.push(tubeGeometry(prevTop, top, 0.02, 4));
+      geos.push(tubeGeometry(prevMid, mid, 0.018, 4));
+    }
+    prevTop = top; prevMid = mid;
+  }
+}
+
+/** 円形デッキ用の支柱基部点列 */
+function circlePts(cx, y, cz, r, segs) {
+  const pts = [];
+  for (let k = 0; k <= segs; k++) {
+    const a = (k / segs) * Math.PI * 2;
+    pts.push(V(cx + Math.cos(a) * r, y, cz + Math.sin(a) * r));
+  }
+  return pts;
+}
+
+function buildBridgeDetails(M) {
+  const meshes = [];
+  const railGeos = [];  // 手すり・光学機器筒 → steelDark
+  const darkGeos = [];  // 窓枠・ラッタル・張線・双眼鏡 → dark
+
+  // ---- 羅針艦橋の窓枠（マリオン）----
+  // 前面（x=+3.68）: 縦桟 14 本
+  for (let z = -3.9; z <= 3.91; z += 0.6) {
+    darkGeos.push(tubeGeometry(V(3.7, 13.27, z), V(3.7, 14.13, z), 0.035, 4));
+  }
+  // 側面（z=±3.99）: 縦桟 各 11 本
+  for (const s of [1, -1]) {
+    for (let x = -3.5; x <= 3.51; x += 0.7) {
+      darkGeos.push(tubeGeometry(V(x, 13.27, s * 4.0), V(x, 14.13, s * 4.0), 0.035, 4));
+    }
+    // 窓帯の上下トリム
+    darkGeos.push(tubeGeometry(V(-3.7, 13.27, s * 4.0), V(3.7, 13.27, s * 4.0), 0.03, 4));
+    darkGeos.push(tubeGeometry(V(-3.7, 14.13, s * 4.0), V(3.7, 14.13, s * 4.0), 0.03, 4));
+  }
+  darkGeos.push(tubeGeometry(V(3.72, 13.27, -3.9), V(3.72, 13.27, 3.9), 0.03, 4));
+  darkGeos.push(tubeGeometry(V(3.72, 14.13, -3.9), V(3.72, 14.13, 3.9), 0.03, 4));
+
+  // ---- 手すり ----
+  railAlong(railGeos, circlePts(0, 14.88, 0, 5.05, 26), 1.0);   // 張り出しデッキ縁
+  railAlong(railGeos, circlePts(0, 20.25, 0, 3.32, 18), 0.85);  // 防空指揮所パラペット上端
+  for (const s of [1, -1]) {                                     // ウィング外縁（コの字）
+    railAlong(railGeos, [
+      V(0.3, 12.42, s * 4.0), V(0.3, 12.42, s * 5.35),
+      V(1.5, 12.42, s * 5.35), V(2.7, 12.42, s * 5.35), V(2.7, 12.42, s * 4.0),
+    ], 0.95);
+  }
+
+  // ---- 防空指揮所の双眼鏡座 ×4 ----
+  for (const [ax, az] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+    const px = ax * 1.8, pz = az * 1.8;
+    darkGeos.push(tubeGeometry(V(px, 19.2, pz), V(px, 20.0, pz), 0.07, 6));         // ペデスタル
+    darkGeos.push(tubeGeometry(V(px - 0.25, 20.08, pz), V(px + 0.25, 20.08, pz), 0.13, 6)); // 双眼鏡
+  }
+
+  // ---- 後面ラッタル（昇降はしご・3 段）----
+  const ladderSpecs = [
+    { x: -5.07, y0: 0.3, y1: 3.9 },   // 第 1 層後面
+    { x: -4.37, y0: 4.0, y1: 7.9 },   // 第 2 層後面
+    { x: -3.87, y0: 8.0, y1: 11.9 },  // 第 3 層後面
+  ];
+  for (const L of ladderSpecs) {
+    for (const s of [1, -1]) {
+      darkGeos.push(tubeGeometry(V(L.x, L.y0, s * 0.3), V(L.x, L.y1, s * 0.3), 0.035, 4));
+    }
+    for (let y = L.y0 + 0.2; y < L.y1; y += 0.5) {
+      darkGeos.push(tubeGeometry(V(L.x, y, -0.3), V(L.x, y, 0.3), 0.022, 4));
+    }
+  }
+
+  // ---- 22 号電探（ラッパ型ホーンアンテナ・左右）----
+  for (const s of [1, -1]) {
+    darkGeos.push(tubeGeometry(V(1.5, 17.0, s * 2.8), V(1.5, 17.0, s * 3.55), 0.06, 5)); // ブラケット
+    const horn = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.18, 1.1, 12), M.steel);
+    horn.rotation.x = s * Math.PI / 2; // 開口を舷外へ
+    horn.position.set(1.5, 17.0, s * 4.1);
+    meshes.push(horn);
+    const back = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.5), M.steelDark);
+    back.position.set(1.5, 17.0, s * 3.6);
+    meshes.push(back);
+  }
+
+  // ---- 15m 測距儀の光学副筒・前面スリットフード ----
+  railGeos.push(tubeGeometry(V(0.6, 21.0, -6.8), V(0.6, 21.0, 6.8), 0.16, 8));
+  railGeos.push(tubeGeometry(V(-0.6, 21.0, -6.8), V(-0.6, 21.0, 6.8), 0.16, 8));
+  const slit = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.5, 2.4), M.steel);
+  slit.position.set(1.75, 21.6, 0);
+  meshes.push(slit);
+
+  // ---- 張線（後支索・信号旗ハリヤード）----
+  for (const s of [1, -1]) {
+    darkGeos.push(tubeGeometry(V(-1.5, 31, 0), V(-3.5, 20.4, s * 2.4), 0.018, 4));  // バックステー
+    darkGeos.push(tubeGeometry(V(-1.5, 28.5, s * 5.5), V(1.6, 15.3, s * 4.3), 0.015, 4)); // ハリヤード
+  }
+
+  meshes.push(mergeToMesh(railGeos, M.steelDark));
+  meshes.push(mergeToMesh(darkGeos, M.dark));
+  return meshes;
 }
 
 /** 21号電探（格子状アンテナ） */

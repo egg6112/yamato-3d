@@ -36,7 +36,8 @@ function buildHAMount(M, shielded) {
     }
   }
 
-  // 連装砲身（高角 30°）
+  // 連装砲身（高角 30°）。ピボットは俯仰アニメーション用に userData へ登録
+  const pivots = [];
   for (const s of [1, -1]) {
     const pivot = new THREE.Group();
     pivot.position.set(0.35, shielded ? 2.0 : 1.95, s * 0.42);
@@ -46,7 +47,10 @@ function buildHAMount(M, shielded) {
     b.position.x = 2.5;
     pivot.add(b);
     g.add(pivot);
+    pivots.push(pivot);
   }
+  g.userData.pivots = pivots;
+  g.userData.baseElev = 0.5;
   return g;
 }
 
@@ -76,20 +80,29 @@ function buildTripleAAGeometry() {
 
 function buildAA(M) {
   const g = new THREE.Group();
+  const haMounts = []; // 旋回・俯仰アニメーション対象
 
   // ---- 12.7cm 高角砲（防盾付き6基・露天6基）----
   const haList = [
     { x: 14, shield: true }, { x: -2, shield: true }, { x: -18, shield: true },
     { x: 6, shield: false }, { x: -10, shield: false }, { x: -26, shield: false },
   ];
+  let k = 0;
   for (const ha of haList) {
     for (const side of [1, -1]) {
       const m = buildHAMount(M, ha.shield);
       m.position.set(ha.x, 11.45, side * 10.6);
       m.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2; // 舷外へ向ける
+      m.userData.baseRotY = m.rotation.y;
+      // 射界制限: 内舷側（|旋回|>90°）へ向くときは砲身を上げて上構との干渉を避ける
+      m.userData.limits = { sweep: 120, elevMin: -5, elevMax: 75, inboardElevMin: 10 };
+      m.userData.animSpeed = { yaw: 16 + (k % 4) * 3, elev: 12 + (k % 3) * 4 };
       g.add(m);
+      haMounts.push(m);
+      k++;
     }
   }
+  g.userData.haMounts = haMounts;
 
   // ---- 25mm 三連装機銃 ----
   const tripleGeo = buildTripleAAGeometry();
@@ -331,7 +344,9 @@ function buildStaffs(M) {
 export function buildDetails(M) {
   const g = new THREE.Group();
 
-  g.add(buildAA(M));
+  const aa = buildAA(M);
+  g.add(aa);
+  g.userData.haMounts = aa.userData.haMounts;
   g.add(buildSearchlights(M));
   g.add(buildBoats(M));
   g.add(buildGroundTackle(M));
