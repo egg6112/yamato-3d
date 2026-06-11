@@ -67,7 +67,9 @@ function buildTurret(M, opt) {
   g.add(peri);
 
   // 砲身 ×3（中央はわずかに後退）
+  // ピボットは俯仰アニメーション用に userData.pivots へ登録する
   const trunnionY = opt.houseH * 0.42;
+  const pivots = [];
   for (let i = -1; i <= 1; i++) {
     const pivot = new THREE.Group();
     pivot.position.set(opt.Lf - 0.5 + (i === 0 ? -opt.recess : 0), trunnionY, i * opt.spacing);
@@ -96,7 +98,10 @@ function buildTurret(M, opt) {
     pivot.add(bag);
 
     g.add(pivot);
+    pivots.push(pivot);
   }
+  g.userData.pivots = pivots;
+  g.userData.baseElev = opt.elev;
   return g;
 }
 
@@ -115,6 +120,7 @@ const SEC_OPT = {
 
 export function buildTurrets(M) {
   const g = new THREE.Group();
+  const turretList = []; // 旋回アニメーション対象（主砲 3 + 副砲 2）
 
   // ---- 主砲バーベット＋砲塔 ----
   // 一番（前部・甲板レベル）／二番（背負い式・嵩上げ）／三番（後部）
@@ -133,7 +139,9 @@ export function buildTurrets(M) {
     const t = buildTurret(M, MAIN_OPT);
     t.position.set(m.x, deck + m.barbH, 0);
     t.rotation.y = m.rotY;
+    t.userData.baseRotY = m.rotY;
     g.add(t);
+    turretList.push(t);
   }
 
   // ---- 副砲（前後の上構上・背負い式） ----
@@ -150,8 +158,11 @@ export function buildTurrets(M) {
     const t = buildTurret(M, SEC_OPT);
     t.position.set(s.x, s.y + s.barbH, 0);
     t.rotation.y = s.rotY;
+    t.userData.baseRotY = s.rotY;
     g.add(t);
+    turretList.push(t);
   }
 
+  g.userData.turrets = turretList;
   return g;
 }

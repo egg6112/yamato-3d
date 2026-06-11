@@ -10,7 +10,9 @@ export function buildYamato(M) {
   ship.name = 'IJN_YAMATO';
 
   ship.add(buildHull(M));
-  ship.add(buildTurrets(M));
+  const turrets = buildTurrets(M);
+  ship.add(turrets);
+  ship.userData.turrets = turrets.userData.turrets; // アニメーション用参照
   ship.add(buildSuperstructure(M));
   ship.add(buildDetails(M));
 

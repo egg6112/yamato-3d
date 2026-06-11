@@ -10,6 +10,7 @@
 | [04_materials_textures.md](04_materials_textures.md) | マテリアル・テクスチャ設計 | `js/materials.js` |
 | [05_rendering_environment.md](05_rendering_environment.md) | レンダリング・環境設計 | `js/environment.js` `js/main.js` |
 | [06_ui_controls.md](06_ui_controls.md) | UI・カメラ制御設計 | `js/controls.js` `index.html` `css/style.css` |
+| [07_animation_effects.md](07_animation_effects.md) | 砲塔アニメーション・煙エフェクト設計 | `js/animation.js` `js/smoke.js` |
 
 ---
 

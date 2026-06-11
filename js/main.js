@@ -4,6 +4,8 @@ import { createMaterials } from './materials.js';
 import { createEnvironment } from './environment.js';
 import { buildYamato } from './yamato/index.js';
 import { setupControls, setupUI } from './controls.js';
+import { createAnimator } from './animation.js';
+import { createSmoke } from './smoke.js';
 
 /* ---- レンダラ ---- */
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -29,6 +31,11 @@ const materials = createMaterials();
 const yamato = buildYamato(materials);
 scene.add(yamato);
 
+/* ---- 砲塔・砲身アニメーション／煙突の煙 ---- */
+const animator = createAnimator(yamato);
+const smoke = createSmoke();
+yamato.add(smoke.points); // 艦と一緒に動揺させる
+
 /* ---- 設計図モード用グリッド ---- */
 const grid = new THREE.GridHelper(800, 80, 0x1c4e6e, 0x0e2c42);
 grid.visible = false;
@@ -36,7 +43,7 @@ scene.add(grid);
 
 /* ---- 操作・UI ---- */
 const controls = setupControls(camera, renderer.domElement);
-setupUI({ scene, yamato, env, controls, grid });
+setupUI({ scene, yamato, env, controls, grid, animator, smoke });
 
 /* ---- リサイズ ---- */
 window.addEventListener('resize', () => {
@@ -46,7 +53,7 @@ window.addEventListener('resize', () => {
 });
 
 // デバッグ・検証用フック
-window.__yamato = { camera, controls, scene, renderer, yamato };
+window.__yamato = { camera, controls, scene, renderer, yamato, animator, smoke };
 
 /* ---- ループ ---- */
 const clock = new THREE.Clock();
@@ -57,6 +64,8 @@ renderer.setAnimationLoop(() => {
   const t = clock.elapsedTime;
 
   env.update(dt);
+  animator.update(dt);
+  smoke.update(dt);
 
   // 微小な動揺（停泊中の艦のゆらぎ）
   yamato.position.y = Math.sin(t * 0.5) * 0.16;
